@@ -1,1 +1,2 @@
 Param($msg);
+Write-Host $msg
