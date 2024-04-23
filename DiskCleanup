@@ -1,3 +1,5 @@
+
+
 $StartDiskVolume    =       get-volume -DriveLetter C
 $TotalDiskGB        =       [math]::round($StartDiskVolume.size / 1GB,2)
 $StartDiskUsedGB    =       [math]::round((($StartDiskVolume.size - $StartDiskVolume.SizeRemaining) / 1GB),2)
@@ -94,33 +96,10 @@ foreach ($l in $proc) {
             $split = $l -split {$_ -eq "'" -or $_ -eq "\"}
             $ProfilesIgnored += $split[$split.count - 2]
         } else {
-            $split = $l -split {$_ -eq "'" -or $_ -eq "\"}
-            $ProfilesToDelete += $split[$split.count - 1]
+            If ($l -notmatch "Listing inactive profiles") {
+                $split = $l -split {$_ -eq "'" -or $_ -eq "\"}
+                $ProfilesToDelete += $split[$split.count - 1]
+            }
         }
     }
 }
-
-foreach ($p in $ProfilesToDelete) {
-    Write-Host "Deleting profile $p"
-    start-process $d.FullName -argumentlist "/id:$p /u" -wait -NoNewWindow
-}
-
-
-$EndDiskVolume    =       get-volume -DriveLetter C
-$EndDiskUsedGB    =       [math]::round((($EndDiskVolume.size - $EndDiskVolume.SizeRemaining) / 1GB),2)
-$EndDiskPercent    =       [math]::round(($EndDiskUsedGB / $TotalDiskGB * 100),0)
-
-$SpaceSavedGB = $StartDiskUsedGB - $EndDiskUsedGB
-
-Write-Host "Total Disk Size:`t`t$TotalDiskGB GB"
-Write-Host "Disk Space Used at Start:`t`t$StartDiskUsedGB GB"
-Write-Host ""
-Write-Host "Current Disk at Start is %$StartDiskPercent full"
-Write-Host ""
-Write-Host ""
-Write-Host "Disk Space Used at End:`t`t$EndDiskUsedGB GB"
-Write-Host ""
-Write-Host "Current Disk at End is %$EndDiskPercent full"
-Write-Host ""
-Write-Host ""
-Write-Host "Script cleared up $SpaceSavedGB GB of disk space."
