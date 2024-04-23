@@ -1,14 +1,12 @@
-
-
 $StartDiskVolume    =       get-volume -DriveLetter C
 $TotalDiskGB        =       [math]::round($StartDiskVolume.size / 1GB,2)
 $StartDiskUsedGB    =       [math]::round((($StartDiskVolume.size - $StartDiskVolume.SizeRemaining) / 1GB),2)
 $StartDiskPercent    =       [math]::round(($StartDiskUsedGB / $TotalDiskGB * 100),0)
 
-Write-Host "Total Disk Size:`t`t$TotalDiskGB GB"
-Write-Host "Disk Space Used:`t`t$StartDiskUsedGB GB"
-Write-Host ""
-Write-Host "Current Disk is %$StartDiskPercent full"
+# Write-Host "Total Disk Size:`t`t$TotalDiskGB GB"
+# Write-Host "Disk Space Used:`t`t$StartDiskUsedGB GB"
+# Write-Host ""
+# Write-Host "Current Disk is %$StartDiskPercent full"
 
 function _DirDelete {
     param ($DirectoryPath)
@@ -35,12 +33,11 @@ function _DirDeleteContents {
         $GB = [math]::round((Get-ChildItem $DirectoryPath -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB,2)
         Write-Host "$DirectoryPath has been found and is $GB GB in size"
         remove-item $DirectoryPath\* -Recurse -Force -ErrorAction SilentlyContinue
-        If ($LASTEXITCODE -eq 0) {
-            Write-Host "Deleted contents of folder $DirectoryPath freeing up $GB GB of space."
-        } else {
-            Write-Host "Error deleting contents of folder $DirectoryPath"
-        }
-        
+#        If ($LASTEXITCODE -eq 0) {
+#            Write-Host "Deleted contents of folder $DirectoryPath freeing up $GB GB of space."
+#        } else {
+#            Write-Host "Error deleting contents of folder $DirectoryPath"
+#        }   
     } else {
         Write-Host "$f does not exist"
     }
@@ -103,3 +100,28 @@ foreach ($l in $proc) {
         }
     }
 }
+
+foreach ($p in $ProfilesToDelete) {
+    Write-Host "Deleting profile $p"
+    start-process $d.FullName -argumentlist "/id:$p /u" -wait -NoNewWindow
+}
+
+
+$EndDiskVolume    =       get-volume -DriveLetter C
+$EndDiskUsedGB    =       [math]::round((($EndDiskVolume.size - $EndDiskVolume.SizeRemaining) / 1GB),2)
+$EndDiskPercent    =       [math]::round(($EndDiskUsedGB / $TotalDiskGB * 100),0)
+
+$SpaceSavedGB = $StartDiskUsedGB - $EndDiskUsedGB
+
+Write-Host "Total Disk Size:`t`t$TotalDiskGB GB"
+Write-Host "Disk Space Used at Start:`t`t$StartDiskUsedGB GB"
+Write-Host ""
+Write-Host "Current Disk at Start is %$StartDiskPercent full"
+Write-Host ""
+Write-Host ""
+Write-Host "Disk Space Used at End:`t`t$EndDiskUsedGB GB"
+Write-Host ""
+Write-Host "Current Disk at End is %$EndDiskPercent full"
+Write-Host ""
+Write-Host ""
+Write-Host "Script cleared up $SpaceSavedGB GB of disk space."
