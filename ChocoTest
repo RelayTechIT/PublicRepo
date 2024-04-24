@@ -1,0 +1,7 @@
+
+$testchoco = choco -v
+if (-not $testchoco) {
+    Write-Output "Seems Chocolatey is not installed"
+} else {
+    Write-Output "Chocolatey Version $testchoco is already installed."
+}
