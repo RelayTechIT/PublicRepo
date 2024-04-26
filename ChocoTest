@@ -1,4 +1,4 @@
-
+$ErrorActionPreference = 'silentlycontinue'
 $testchoco = choco -v
 if (-not $testchoco) {
     Write-Output "Seems Chocolatey is not installed"
