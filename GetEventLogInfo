@@ -1,0 +1,23 @@
+function _GetEventLogInfo {
+    param(
+    [Parameter(Mandatory=$true)]
+    [string] $EventLogName
+    )
+
+    $EventLogProperties = Get-WinEvent -ListLog $EventLogName | Select MaximumSizeInBytes, FileSize, IsLogFull, OldestRecordNumber, IsEnabled, LogMode
+
+    Write-Host "Current Event Log Info:"
+    Write-Host "`tName:`t`t"$EventLogName
+    Write-Host "`tMax Size (MB):`t" ($EventLogProperties.MaximumSizeInBytes / 1MB)
+    Write-Host "`tFile Size (MB):`t" ($EventLogProperties.FileSize / 1MB)
+    Write-Host "`tIs Log Full:`t" $EventLogProperties.IsLogFull
+    Write-Host "`tIs Log Enabled:`t" $EventLogProperties.IsEnabled
+    Write-Host "`tLog Mode:`t" $EventLogProperties.LogMode  
+}
+
+$Logs = Get-EventLog -List | ForEach {$_.log}
+
+ForEach ($Log in $Logs) {
+Write-Host $Log
+  _GetEventLogInfo -EventLogName $Log
+}
