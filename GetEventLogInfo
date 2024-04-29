@@ -8,8 +8,8 @@ function _GetEventLogInfo {
 
     Write-Host "Current Event Log Info:"
     Write-Host "`tName:`t`t"$EventLogName
-    Write-Host "`tMax Size (MB):`t" ($EventLogProperties.MaximumSizeInBytes / 1MB)
-    Write-Host "`tFile Size (MB):`t" ($EventLogProperties.FileSize / 1MB)
+    Write-Host "`tMax Size (MB):`t" ([Math]::Round(($EventLogProperties.MaximumSizeInBytes / 1MB),2))
+    Write-Host "`tFile Size (MB):`t" ([Math]::Round(($EventLogProperties.FileSize / 1MB),2))
     Write-Host "`tIs Log Full:`t" $EventLogProperties.IsLogFull
     Write-Host "`tIs Log Enabled:`t" $EventLogProperties.IsEnabled
     Write-Host "`tLog Mode:`t" $EventLogProperties.LogMode  
