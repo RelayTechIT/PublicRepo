@@ -1,3 +1,5 @@
+$ProgressPreference = 'SilentlyContinue'
+
 Function _RTWinTimeFix {
     param(
         [Parameter(Mandatory=$false)]
@@ -14,7 +16,7 @@ Function _RTWinTimeFix {
         foreach ($Z in $TZ) {
             If ($Z.id -match $TimeZone) {
                 If ($Z.Id.Length -eq $TimeZone.Length) {
-                    Write-Host "Match on $TimeZone"
+#                    Write-Host "Match on $TimeZone"
                     $Match = $Match + 1
                 }
             }
@@ -28,14 +30,14 @@ Function _RTWinTimeFix {
     }
 
     $GetTZ = Get-TimeZone
-    Write-Host "Current TimeZone is:" $GetTz.Id
+#    Write-Host "Current TimeZone is:" $GetTz.Id
 
     If ($GetTZ.Id -ne $TimeZone) {
-        Set-TimeZone $TimeZone -PassThru
+        Set-TimeZone $TimeZone
         If ($?) {
-            Write-Host "SUCCESS: Timezone set to: $TimeZone" -ForegroundColor Green
+            Write-Host SUCCESS: Timezone set to from $GetTZ.Id to $TimeZone -ForegroundColor Green
         } else {
-            Write-Host "FAILURE: Error setting Timezone to: $TimeZone" -ForegroundColor Red
+            Write-Host FAILURE: Error setting timezone rom $GetTZ.Id to $TimeZone -ForegroundColor Red
         }
     } else {
         Write-Host "GENERAL: Timezone already set to: $TimeZone" -ForegroundColor Yellow
