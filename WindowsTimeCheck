@@ -1,6 +1,7 @@
 $TZ = Get-TimeZone
 $TS = Get-Service "Windows Time" | select *
 $w32tm = w32tm /query /status
+$W32tmErr = ''
 
 Write-Host Current TimeZome is: $TZ.Id with offset: $TZ.BaseUtcOffset
 Write-Host Windows Time Service is $TS.Status with a startup type of: $TS.StartType
