@@ -89,7 +89,7 @@ Function _RTWinTimeFix {
 }
 
 If (!($TS)) {$TS = read-host -prompt 'Enter value for Time Server'}
-If (!($TS)) {$TZ = read-host -prompt 'Enter value for Time Zone'}
+If (!($TZ)) {$TZ = read-host -prompt 'Enter value for Time Zone'}
 
 
 _RTWinTimeFix -TimeServer $TS -TimeZone $TZ
