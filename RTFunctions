@@ -83,4 +83,14 @@ function _InputWait {
     }
 }
 
+function _UpdateWindows {
+        param (
+        )
+            Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Force; 
+            Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force; 
+            Install-Module -Name PSWindowsUpdate -Force; 
+            Get-Package -Name PSWindowsUpdate -Force; 
+            Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot
+    }
+
 # Functions End
