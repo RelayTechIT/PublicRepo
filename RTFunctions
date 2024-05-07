@@ -35,6 +35,13 @@ function _DirDeleteContents {
     }
 } # _DirDeleteContents
 
+function _Get-UptimeDays {
+    param (
+    )
+    $Uptime = New-TimeSpan (get-date (Get-CimInstance -ClassName Win32_OperatingSystem).LastBootUpTime) (get-Date)
+    Return [math]::Round($uptime.TotalDays,2)
+}
+
 function _IEXRun {
     param (
         $Command,
