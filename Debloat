@@ -1,0 +1,79 @@
+$ErrorActionPreference = 'STOP'
+
+$Software = @(
+"MicrosoftTeams",
+"Clipchamp.Clipchamp"
+"Microsoft.PowerAutomateDesktop",
+"Microsoft.Todos",
+"Microsoft.WindowsMaps",
+"Microsoft.People",
+"Microsoft.OutlookForWindows",
+"Microsoft.ZuneVideo",
+"Microsoft.ZuneMusic",
+"Microsoft.BingNews",
+"Microsoft.BingWeather",
+"Microsoft.BingSearch",
+"Microsoft.GamingApp",
+"Microsoft.YourPhone",
+"Microsoft.Xbox.TCUI",
+"Microsoft.XboxGameOverlay",
+"Microsoft.XboxGamingOverlay",
+"Microsoft.XboxIdentityProvider",
+"Microsoft.XboxGameCallableUI",
+"Microsoft.XboxSpeechToTextOverlay",
+"MicrosoftCorporationII.QuickAssist",
+"Microsoft.MicrosoftSolitaireCollection"
+)
+
+function _Uninstall {
+    param(
+        [Parameter(Mandatory=$true)][string]$SoftwareName,
+        [Parameter(Mandatory=$false)][bool]$Force = $False
+    )
+
+    try {
+        Write-Host "Searching for packages named $($SoftwareName)"
+
+        # Identify AppxProvisioned Packages
+            $AppxProvPkg = Get-AppxProvisionedPackage -Online | where {$_.PackageName -like "*$($SoftwareName)*"}
+
+        # Identify Appx Packages
+            $AppxPkg = Get-AppxPackage -AllUsers | where {$_.PackageFullName -like "*$($SoftwareName)*"}
+        
+        # Display Findings
+        Write-Host "AppxPackages found:             $($AppxPkg.count)"
+        Write-Host "AppxProvisionedPackages found:  $($AppxProvPkg.count)"
+        Write-Host ""
+        Write-Host "Total Packages:                 $($AppxPkg.Count + $AppxProvPkg.count)"
+        Write-Host ""
+
+        If ($($AppxPkg.Count + $AppxProvPkg.count) -gt 0) {
+            If ($Force) {
+                Write-Host "Removing packages..."
+                Write-Host ""
+                # Remove AppxProvisioned packages
+                    If ($AppxProvPkg.Count -gt 0) {$AppxProvPkg | foreach {Remove-AppxProvisionedPackage -AllUsers -Online -PackageName $_.PackageName}}
+                # Remove Appx Packages
+                    If ($AppxPkg.Count -gt 0) {$AppxPkg | foreach {Remove-AppxPackage -AllUsers -Package $_.PackageFullName}}
+            } else {
+                $c = read-host -prompt "Would you like to uninstall these packages? (Type UNINSTALL to remove packages)"
+                If ($c -eq "UNINSTALL") {
+                    # Remove AppxProvisioned packages
+                        $AppxProvPkg | foreach {Remove-AppxProvisionedPackage -AllUsers -Online -PackageName $_.PackageName}
+                    # Remove Appx Packages
+                        $AppxPkg | foreach {Remove-AppxPackage -AllUsers -Package $_.PackageFullName}
+                } else {
+                    write-host "No packages were uninstalled."
+                }
+            }
+        } else {
+            Write-Host "No packages found with the name: $($SoftwareName)"
+        }
+    } catch {
+        Write-Warning "An error occurred: $($_)"
+    }
+    
+        
+}
+
+$Software | foreach {_Uninstall -SoftwareName $_}
