@@ -76,4 +76,24 @@ function _Uninstall {
         
 }
 
-$Software | foreach {_Uninstall -SoftwareName $_}
+ While (1) {
+    Write-Host "Select an option:"
+    Write-Host "    1 - Manual Mode"
+    Write-Host "    2 - Automated Mode"
+    Write-Host ""
+    Write-Host "    99 - Exit Script"
+    Write-Host ""
+    $menu = read-host -prompt "Select an option"
+
+    if ($menu -eq 99) {
+        Write-Host "Exiting Menu." -foregroundcolor yellow; Break;
+    } elseif ($menu -eq 1) {
+        $Software | foreach {_Uninstall -SoftwareName $_}
+    } elseif ($menu -eq 2) {
+        $Software | foreach {_Uninstall -SoftwareName $_ -force $true}
+    } else {
+        Write-Host "Incorrect Selection. Pick again." -foregroundcolor yellow
+    }
+ }
+
+
