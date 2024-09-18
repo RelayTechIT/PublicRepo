@@ -1,3 +1,5 @@
+$Score = ''
+
 cls
 Write-Host "###" -foregroundcolor yellow
 Write-Host "###" -foregroundcolor yellow
