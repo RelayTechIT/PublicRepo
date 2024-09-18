@@ -1,4 +1,9 @@
 $Score = ''
+$StreetNumber = ''
+$StreetName = ''
+$City = ''
+$State = ''
+$Zip = ''
 
 cls
 Write-Host "###" -foregroundcolor yellow
