@@ -1,4 +1,13 @@
-Write-Host "You must type your address within 120 seconds to use this computer."
+cls
+Write-Host "###" -foregroundcolor yellow
+Write-Host "###" -foregroundcolor yellow
+Write-Host "###         ATTENTION $($ENV:username)" -foregroundcolor yellow
+Write-Host "###" -foregroundcolor yellow
+Write-Host "###" -foregroundcolor yellow
+Write-Host "###         YOU MUST TYPE YOUR ADDRESS IN THE BOX BELOW AND PRESS ENTER" -foregroundcolor yellow
+Write-Host "###         WITHIN 180 SECONDS OR THE SYSTEM WILL KICK YOU OFF" -foregroundcolor yellow
+Write-Host "###" -foregroundcolor yellow
+Write-Host "###                             GOOD LUCK" -foregroundcolor yellow
 $Read = Read-Host
 
 if ($read -match "1014") {$StreetNumber = $True; $Score++}
