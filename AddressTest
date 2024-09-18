@@ -1,71 +1,57 @@
-$Score = ''
-$StreetNumber = ''
-$StreetName = ''
-$City = ''
-$State = ''
-$Zip = ''
+Remove-Variable message -ea SilentlyContinue
+Remove-Variable results -ea SilentlyContinue
+Remove-Variable score -ea SilentlyContinue
+Remove-Variable StreetNumber -ea SilentlyContinue
+Remove-Variable StreetName -ea SilentlyContinue
+Remove-Variable City -ea SilentlyContinue
+Remove-Variable State -ea SilentlyContinue
+Remove-Variable Zip -ea SilentlyContinue
 
 cls
-Write-Host "###" -foregroundcolor yellow
-Write-Host "###" -foregroundcolor yellow
-Write-Host "###         ATTENTION $($ENV:username)" -foregroundcolor yellow
-Write-Host "###" -foregroundcolor yellow
-Write-Host "###" -foregroundcolor yellow
-Write-Host "###         YOU MUST TYPE YOUR ADDRESS IN THE BOX BELOW AND PRESS ENTER" -foregroundcolor yellow
-Write-Host "###         WITHIN 180 SECONDS OR THE SYSTEM WILL KICK YOU OFF" -foregroundcolor yellow
-Write-Host "###" -foregroundcolor yellow
-Write-Host "###                             GOOD LUCK" -foregroundcolor yellow
+$Message = @()
+$Message += "###"
+$Message += "###"
+$Message += "###      ATTENTION $($ENV:username)"
+$Message += "###"
+$Message += "###      YOU MUST TYPE YOUR ADDRESS IN THE BOX BELOW AND PRESS ENTER"
+$Message += "###         WITHIN 180 SECONDS OR THE SYSTEM WILL KICK YOU OFF"
+$Message += "###"
+$Message += "###                             GOOD LUCK"
+$Message += ""
+$Message | foreach {Write-Host "$($_)" -ForegroundColor Yellow}
 $Read = Read-Host
 
-if ($read -match "1014") {$StreetNumber = $True; $Score++}
-if ($read -match "Francis Ave") {$StreetName = $True; $Score++}
-if ($read -match "Halethorpe") {$City = $True; $Score++}
-if (($read -match "Maryland") -or ($read -match "MD")) {$State = $True; $Score++}
-if ($read -match "21227") {$Zip = $True; $Score++}
+$Results = @()
 
-Write-Host "You entered $($read)"
-Write-Host ""
+$Msg = "Street Number"; $Val = "1014"
+if ($read -match $val) {$v = "RIGHT"; $Score++} else {$v = "WRONG"}
+    $Results += "$($Msg) is:            $($v)"
 
-$Msg = "Street Number"
-if ($StreetNumber) {
-    Write-host "    $($Msg) is:   CORRECT" -foregroundcolor green
-} else {
-    Write-host "    $($Msg) is:   MISSING OR INCORRECT" -foregroundcolor Red
-}
+$Msg = "Street Name"; $Val = "Francis Ave"
+if ($read -match $val) {$v = "RIGHT"; $Score++} else {$v = "WRONG"}
+    $Results += "$($Msg) is:            $($v)"
 
-$Msg = "Street Name"
-if ($StreetName) {
-    Write-host "    $($Msg) is:   CORRECT" -foregroundcolor green
-} else {
-    Write-host "    $($Msg) is:   MISSING OR INCORRECT" -foregroundcolor Red
-}
+$Msg = "City"; $Val = "Halethorpe"
+if ($read -match $val) {$v = "RIGHT"; $Score++} else {$v = "WRONG"}
+    $Results += "$($Msg) is:            $($v)"
 
-$Msg = "City"
-if ($City) {
-    Write-host "    $($Msg) is:   CORRECT" -foregroundcolor green
-} else {
-    Write-host "    $($Msg) is:   MISSING OR INCORRECT" -foregroundcolor Red
-}
+$Msg = "State"; $Val1 = "Maryland"; $Val2 = "MD"
+if (($read -match $Val1) -or ($read -match $Val2)) {$v = "RIGHT"; $Score++} else {$v = "WRONG"}
+    $Results += "$($Msg) is:            $($v)"
 
-$Msg = "State"
-if ($State) {
-    Write-host "    $($Msg) is:   CORRECT" -foregroundcolor green
-} else {
-    Write-host "    $($Msg) is:   MISSING OR INCORRECT" -foregroundcolor Red
-}
+$Msg = "Zip"; $Val = "21227"
+if ($read -match $val) {$v = "RIGHT"; $Score++} else {$v = "WRONG"}
+    $Results += "$($Msg) is:            $($v)"
 
-$Msg = "Zip Code"
-if ($Zip) {
-    Write-host "    $($Msg) is:   CORRECT" -foregroundcolor green
-} else {
-    Write-host "    $($Msg) is:   MISSING OR INCORRECT" -foregroundcolor Red
-}
+$Results += ""
+$Results += "You scored $($Score) out of 5"
 
-Write-Host ""
-if ($Score -eq 5) {
-    Write-Host "You scored $($Score) out of 5" -foregroundcolor green
-} elseif ($Score -lt 3) {
-    Write-Host "You scored $($Score) out of 5" -foregroundcolor red
-} else {
-    Write-Host "You scored $($Score) out of 5" -foregroundcolor yellow
+$Results | foreach {
+    if ($_ -match "RIGHT") {
+        Write-Host "$($_)" -foregroundcolor green
+    } elseif ($_ -match "WRONG") {
+        Write-Host "$($_)" -foregroundcolor red
+    } else {
+        Write-Host "$($_)"
+    }
 }
