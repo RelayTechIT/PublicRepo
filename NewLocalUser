@@ -3,8 +3,8 @@ if (!($NewUserLastName)) {Write-Host "Enter Users Last Name"; $NewUserLastName =
 
 $NewUserFullName   =   "$($NewUserFirstName) $($NewUserLastName)"
 $NewUsername       =   "$($NewUserFirstName.Substring(0,1).ToLower())$($NewUserLastName.ToLower())"
-Write-Host "Users full name is:         $($UserFullName)"
-Write-Host "Username will be set to:    $($UserName)"
+Write-Host "Users full name is:         $($NewUserFullName)"
+Write-Host "Username will be set to:    $($NewUserName)"
 Write-Host "Is this correct?"
 pause
 
