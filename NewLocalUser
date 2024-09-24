@@ -1,5 +1,7 @@
-$UserFirstName  =   read-host -prompt "Enter Users First Name"
-$UserLastName   =   read-host -prompt "Enter Users Last Name"
+Write-Host "Enter Users First Name"
+$UserFirstName  =   read-host
+Write-Host "Enter Users Last Name"
+$UserLastName   =   read-host
 $Username       =   "$($UserFirstName.Substring(0,1).ToLower())$($UserLastName.ToLower())"
 Write-Host "Users full name is:         $($UserFirstName) $($UserLastName)"
 Write-Host "Username will be set to:    $($UserName)"
@@ -13,6 +15,7 @@ if ($Chk) {
 } else {
     Write-Host "Username $($Username) does not exist. Press any key to continue."
     pause
-    $UPd            =   read-host -prompt "Enter initial password for $($UserName)" -AsSecureString
+    Write-Host "Enter initial password for $($UserName)"
+    $UPd            =   read-host -AsSecureString
     New-LocalUser -name $UserName -Password $Password -FullName $FullName -PasswordExpires $false -UserMayChangePassword $false    
 }
