@@ -1,0 +1,18 @@
+$UserFirstName  =   read-host -prompt "Enter Users First Name"
+$UserLastName   =   read-host -prompt "Enter Users Last Name"
+$Username       =   "$($UserFirstName.Substring(0,1).ToLower())$($UserLastName.ToLower())"
+Write-Host "Users full name is:         $($UserFirstName) $($UserLastName)"
+Write-Host "Username will be set to:    $($UserName)"
+Write-Host "Is this correct?"
+pause
+
+$Chk = Get-LocalUser | where {$_.name -like "*$($Username)*"}
+if ($Chk) {
+    Write-Host "A user with username $($Username) already exists!"
+    pause
+} else {
+    Write-Host "Username $($Username) does not exist. Press any key to continue."
+    pause
+    $UPd            =   read-host -prompt "Enter initial password for $($UserName)" -AsSecureString
+    New-LocalUser -name $UserName -Password $Password -FullName $FullName -PasswordExpires $false -UserMayChangePassword $false    
+}
