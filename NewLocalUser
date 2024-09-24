@@ -15,6 +15,7 @@ if ($Chk) {
 } else {
     Write-Host "Username $($NewUsername) does not exist. Press any key to continue."
     pause
-    Write-Host "Enter initial password for $($NewUserName)"; $UPd = read-host -AsSecureString
-    New-LocalUser -name $NewUserName -Password $UPd -FullName $NewUserFullName -PasswordExpires $false -UserMayChangePassword $false
+
+    Write-Host "Enter initial password for $($NewUserName)"; $Password = Read-Host -AsSecureString    
+    New-LocalUser -Name $NewUserName -fullname $NewUserFullName -password $Password
 }
