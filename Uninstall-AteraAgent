@@ -26,4 +26,3 @@ function _WMIRemove {
 
 
 _WMIRemove -Software "Atera"
-_WMIRemove -Software "Splashtop"
