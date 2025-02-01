@@ -71,7 +71,6 @@ Try {
                 Write-Host "    $($app.name)"
                 Write-Host "    $($app.version)"
             }
-        }
 }
 Catch {
     Write-Host "An error has occurred: $($_)"
