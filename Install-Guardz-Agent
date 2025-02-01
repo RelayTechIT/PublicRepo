@@ -2,10 +2,7 @@
 # Custom Guardz Installer
 
     The install script provided by Guardz wasn't working using Atera so I wrote one.
-    
-        Step 1 - Uninstalls existing Guardz Agent
-        Step 2 - Removes lingering services, processes, and folders
-        Step 3 - Installs Guardz Agent using specified Org key
+        - Installs Guardz Agent using specified Org key
     
     Specify your own Org key and local install directory
 #>
@@ -29,69 +26,21 @@ $DataDir                =   "$($env:ProgramData)\com.guardz"
 $StateFilePath          =   "$DataDir\auth-state.json"
 $Directories            =   $lclPath,$DataDir
 
-# Step 1 - Guardz Agent Uninstall
-Try {
-        $app = Get-WmiObject -Class Win32_Product -Filter "Name = 'Guardz Agent'"
-        if ($app.name.count -gt 0) {
-            $app.Uninstall()
-        } else {
-            Write-Host "Guardz Agent not installed on system"
-        }
-        
-    }
-    Catch {
-        Write-Host "An error has occurred: $($_)"
-    }
-
-# Step 2 - Guardz Agent file cleanup
+# Guardz Agent Reinstall
 
 Try {
-    Write-Host "Checking for $($ProcessName) processes and services"
-    $service = Get-WmiObject -Class Win32_Service -Filter "Name='$($ProcessName)'"
-    if ($service.Name.count -gt 0) {
-        Write-Host "$($ProcessName) service found"
-        Write-Host "Stopping and deleting $($ProcessName) service"
-            get-service $ProcessName | stop-service
-            $service.delete()
-            Write-Host "$($ProcessName) service stopped and deleted successfully"        
-    } else {
-        Write-Host "$($ProcessName) Service not detected"
-    }
-    
-    $p = get-process $ProcessName -ea silentlycontinue
-        if ($p.count -gt 0) {
-            Write-Host "$($ProcessName) processes found"
-            Write-Host "Stopping and deleting $($ProcessName) process"
-            stop-process $p 
-            Write-Host "$($ProcessName) process stopped successfully"
-        } else {
-            Write-Host "$($ProcessName) process not detected"
-        }
-
-    $Directories | foreach {
-        Write-Host "Looking for folder $($_)"
-        if (test-path $_ -ea silentlycontinue) {
-            remove-item $_ -recurse -force}
-            Write-Host "Folder $($_) found and deleted"
-    }
-}
-catch {
-    Write-Host "An error occurred: $($_)"
-}
-
-# Step 3 - Guardz Agent Reinstall
-
-Try {
+    # If key is missing throw an exception
     if (!($key)) {
-        Write-host "Enter Organization Key to Continue"
-        $Key = read-host -prompt "Organization Key"
+        Throw "Organization Key is missing. Setup cannot continue."
     }
-    $Directories | foreach {if (!(test-path $_ -ea silentlycontinue)) {new-item -itemtype Directory -force -path $_ > $null}}  
+
+    # Create directories if they don't exist
+    $Directories | foreach {
+        if (!(test-path $_ -ea silentlycontinue)) {new-item -itemtype Directory -force -path $_ > $null}
+    }  
     if ($Version.Length -gt 0) {$VersionQueryParam = "?version=$Version"}
- #   if (!(test-path $lclPath)) {new-item $lclPath -itemtype Directory -Force}
     if (Test-Path $InstallerTempPath) {Remove-Item -Path $InstallerTempPath -Force}
     iwr -useb -Uri $DownloadURL -OutFile $InstallerTempPath
-#    New-Item -ItemType Directory -Force -Path $DataDir > $null
 
     [System.IO.File]::WriteAllLines($StateFilePath, "{""organization_key"":""$Key""}")
     $InstallerProcess = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/I ""$InstallerTempPath"" /qn"
