@@ -1,112 +1,106 @@
-if (!($key)) {
-    Write-host "Enter Organization Key to Continue"
-    $Key = read-host -prompt "Organization Key"
-}
+<#
+# Custom Guardz Installer
 
-param (
-  [Parameter()]
-  [string]$OrganizationKey = $Key,
-  [Parameter()]
-  [string]$Version = ""
-)
+    The install script provided by Guardz wasn't working using Atera so I wrote one.
+    
+        Step 1 - Uninstalls existing Guardz Agent
+        Step 2 - Removes lingering services, processes, and folders
+        Step 3 - Installs Guardz Agent using specified Org key
+    
+    Specify your own Org key and local install directory
+#>
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference  =   "Stop"
+$ProgressPreference     =   'silentlycontinue'
 
-$VersionQueryParam = ""
-if ($Version.Length -gt 0) {
-  $VersionQueryParam = "?version=$Version"
-}
+# Different key and token per client
+# $Key                    =   "{[Organization_Key]}"
 
-$InstallerName = "GuardzAgent.msi"
-$ProcessName = "Guardz Agent"
-$InstallerTempPath = Join-Path $Env:TMP $InstallerName
-$DownloadURL = "https://app.us.guardz.com/api/device-agent/download/windows$VersionQueryParam"
-$DataDir = "$([Environment]::GetFolderPath([System.Environment+SpecialFolder]::CommonApplicationData))\com.guardz"
-$StateFilePath = "$DataDir\auth-state.json"
+# Set lclPath to your local repository or a temp directory
+$lclPath                =   "C:\RTSupport\GuardzAgent"
 
-function SetDataDirPermissions ($DataDirFiles, $TargetUsersGroup) {
-  foreach ($DataDirFile in $DataDirFiles) {
-    $Acl = Get-Acl $DataDirFile
+$ProcessName            =   "Guardz Agent"
+$InstallerName          =   "$($ProcessName)`.msi"
+$Version                =   ""
+$VersionQueryParam      =   ""
+$InstallerTempPath      =   Join-Path $lclPath $InstallerName
+$DownloadURL            =   "https://app.us.guardz.com/api/device-agent/download/windows$VersionQueryParam"
+$DataDir                =   "$($env:ProgramData)\com.guardz"
+$StateFilePath          =   "$DataDir\auth-state.json"
+$Directories            =   $lclPath,$DataDir
 
-    foreach ($AccessRule in $Acl.Access) {
-      $Acl.RemoveAccessRule($AccessRule) > $null
+# Step 1 - Guardz Agent Uninstall
+Try {
+        $app = Get-WmiObject -Class Win32_Product -Filter "Name = 'Guardz Agent'"
+        if ($app.name.count -gt 0) {
+            $app.Uninstall()
+        } else {
+            Write-Host "Guardz Agent not installed on system"
+        }
+        
+    }
+    Catch {
+        Write-Host "An error has occurred: $($_)"
     }
 
-    $Permission = $TargetUsersGroup, "FullControl", "None", "None", "Allow"
-    $NewAccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule $Permission
-    $Acl.SetAccessRuleProtection($true, $false)
-    $Acl.ResetAccessRule($NewAccessRule)
-    Set-Acl -Path $DataDirFile -AclObject $Acl
-  }
+# Step 2 - Guardz Agent file cleanup
+
+Try {
+    Write-Host "Checking for $($ProcessName) processes and services"
+    $service = Get-WmiObject -Class Win32_Service -Filter "Name='$($ProcessName)'"
+    if ($service.Name.count -gt 0) {
+        Write-Host "$($ProcessName) service found"
+        Write-Host "Stopping and deleting $($ProcessName) service"
+            get-service $ProcessName | stop-service
+            $service.delete()
+            Write-Host "$($ProcessName) service stopped and deleted successfully"        
+    } else {
+        Write-Host "$($ProcessName) Service not detected"
+    }
+    
+    $p = get-process $ProcessName -ea silentlycontinue
+        if ($p.count -gt 0) {
+            Write-Host "$($ProcessName) processes found"
+            Write-Host "Stopping and deleting $($ProcessName) process"
+            stop-process $p 
+            Write-Host "$($ProcessName) process stopped successfully"
+        } else {
+            Write-Host "$($ProcessName) process not detected"
+        }
+
+    $Directories | foreach {
+        Write-Host "Looking for folder $($_)"
+        if (test-path $_ -ea silentlycontinue) {
+            remove-item $_ -recurse -force}
+            Write-Host "Folder $($_) found and deleted"
+    }
+}
+catch {
+    Write-Host "An error occurred: $($_)"
 }
 
-function Main () {
-  $CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent()
-  $CurrentUserPrincipal = New-Object System.Security.Principal.WindowsPrincipal($CurrentUser)
-  $IsCurrentUserAdmin = $CurrentUserPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
-  $WindowsVersion = [System.Environment]::OSVersion.Version
+# Step 3 - Guardz Agent Reinstall
 
-  if ($WindowsVersion.Major -lt 10) {
-    throw "Guardz Agent may only be installed on Windows 10 or newer"
-  }
+Try {
+    if (!($key)) {
+        Write-host "Enter Organization Key to Continue"
+        $Key = read-host -prompt "Organization Key"
+    }
+    $Directories | foreach {if (!(test-path $_ -ea silentlycontinue)) {new-item -itemtype Directory -force -path $_ > $null}}  
+    if ($Version.Length -gt 0) {$VersionQueryParam = "?version=$Version"}
+ #   if (!(test-path $lclPath)) {new-item $lclPath -itemtype Directory -Force}
+    if (Test-Path $InstallerTempPath) {Remove-Item -Path $InstallerTempPath -Force}
+    iwr -useb -Uri $DownloadURL -OutFile $InstallerTempPath
+#    New-Item -ItemType Directory -Force -Path $DataDir > $null
 
-  if (!$IsCurrentUserAdmin) {
-    throw "This script must be run as an administrator."
-  }
-
-  if ($OrganizationKey.Length -eq 0) {
-    throw "Organization key was not provided. (as first argument of the script or using the named parameter -OrganizationKey)"
-  }
-
-  if (Test-Path $InstallerTempPath) {
-    Remove-Item -Path $InstallerTempPath -Force
-  }
-
-  $WebClient = New-Object System.Net.WebClient
-  $WebClient.DownloadFile($DownloadURL, $InstallerTempPath)
-
-  # We then try to uninstall an existing agent using the msiexec uninstaller
-  # It will not work for a SYSTEM user for old installation, but will work for new or manual installations
-  $UninstallerProcess = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/x ""$InstallerTempPath"" /qn"
-
-  # If the uninstaller returns 1605, it means that the device agent was not installed.
-  # We ignore this case and continue with the installation.
-  if ($UninstallerProcess.ExitCode -eq 0 -Or $UninstallerProcess.ExitCode -eq 1605) {
-    Stop-Service -Name "Guardz Agent" -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 3
-    Stop-Process -Name $ProcessName -Force -ErrorAction SilentlyContinue
-    Start-Sleep -Seconds 3
-  }
-  else {
-    throw "Unable to uninstall existing Guardz device agent. Try to uninstall it manually. (exit code: $($UninstallerProcess.ExitCode))"
-  }
-
-  # We reset the permissions on the data directory to avoid any permission issue
-  if (Test-Path $DataDir) {
-    # SID for the Administrators group - this should be the same on all Windows systems
-    $AdminsGroup = New-Object System.Security.Principal.SecurityIdentifier("S-1-5-32-544")
-    SetDataDirPermissions (, $DataDir) $AdminsGroup
-    SetDataDirPermissions (Get-ChildItem $DataDir -Recurse | ForEach-Object { $_.FullName }) $AdminsGroup
-  }
-
-  # Write the organization key to the state file.
-  # Needs to be done before the installation (in case the user launches the agent immediately after installation)
-  New-Item -ItemType Directory -Force -Path $DataDir > $null
-  [System.IO.File]::WriteAllLines($StateFilePath, "{""organization_key"":""$OrganizationKey""}")
-
-  # We set the permissions on the data directory and all its files to only allow SYSTEM to access it
-  # SID for the System user - this should be the same on all Windows systems
-  $SystemUser = New-Object System.Security.Principal.SecurityIdentifier("S-1-5-18")
-  $DataDirFiles = Get-ChildItem $DataDir -Recurse | ForEach-Object { $_.FullName }
-  if (!($DataDirFiles -is [array])) {
-    $DataDirFiles = , $DataDirFiles
-  }
-  SetDataDirPermissions ($DataDirFiles += $DataDir) $SystemUser
-
-  $InstallerProcess = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/I ""$InstallerTempPath"" /qn"
-  Remove-Item -Path $InstallerTempPath -Force
-
-  if ($InstallerProcess.ExitCode -ne 0) {throw "Unable to install Guardz device agent."}
+    [System.IO.File]::WriteAllLines($StateFilePath, "{""organization_key"":""$Key""}")
+    $InstallerProcess = Start-Process msiexec.exe -Wait -PassThru -ArgumentList "/I ""$InstallerTempPath"" /qn"
+    if ($InstallerProcess.ExitCode -ne 0) {
+        throw "Unable to install Guardz device agent."
+    } else {
+        Write-Host "$($ProcessName) installed successfully"
+    }
 }
-
-Main
+catch {
+    Write-Host "An error occurred: $($_)"
+}
