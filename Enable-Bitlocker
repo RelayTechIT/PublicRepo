@@ -1,0 +1,66 @@
+<#
+# Enable-Bitlocker
+    Preforms some basic checks then enables bitlocket.
+#>
+
+$ErrorActionPreference  =   "Stop"
+$ProgressPreference     =   'silentlycontinue'
+
+# Script Start
+
+Try {
+  # If there is a disk in the CD-ROM Drive throw an exception.
+  if ((Get-WMIObject -Class Win32_CDROMDrive -Property *).MediaLoaded) {
+    throw "Cannot encrypt device with media in the drive. Eject media and try again"
+} else {
+  Write-Host "No CD-ROM in the drive"
+}
+
+  # If a TPM key is missing throw an exception
+  $tpm = get-tpm
+    if ($tpm.TpmPresent) {
+      Write-Host "TPM Present"
+    } else {
+      Throw "TPM NOT Present. Script cannot continue."
+  }
+
+  # Turn on Bitlocker
+
+  Get-BitLockerVolume | where {$_.ProtectionStatus -ne "On"} | foreach {
+      if ($_.MountPoint -eq $Env:SystemDrive) {
+          Write-Host "Encrypting System Drive $($_.MountPoint)"
+          Enable-BitLocker -MountPoint $_.MountPoint -SkipHardwareTest -RecoveryPasswordProtector
+      } else {
+          Write-Host "Encrypting Non-System Drive $($_.MountPoint)"
+          Enable-BitLocker -MountPoint $_.MountPoint -SkipHardwareTest -RecoveryPasswordProtector
+          Write-Host "Enabling Auto-Unlock on Non-System Drive $($_.MountPoint)"
+          Enable-BitLockerAutoUnlock -MountPoint $_.MountPoint
+      }
+  }
+  
+While (1) {
+      get-bitlockervolume | foreach {
+          if ($_.EncryptionPercentage -ne 100) {
+              Write-Host "Drive $($_.MountPoint) %$($_.EncryptionPercentage) encryption... checking again in 60 seconds"
+              sleep 60
+              continue
+          } else {
+              Write-Host ""
+              Write-Host ""
+              Get-bitlockervolume
+              Write-Host ""
+              Write-Host "Encryption Complete!"
+              break
+          }
+      }
+  }
+
+get-bitlockervolume | foreach {
+  Write-Host "The following drives have been encrypted:"
+  Write-Host "  $($_.MountPoint) is encrypted with a recovery key of: $(((Get-BitLockerVolume -MountPoint "$($_.MountPoint)").KeyProtector | Where-Object { $_.KeyProtectorType -eq "RecoveryPassword" }).RecoveryPassword)"
+}
+
+}
+catch {
+    Write-Host "An error occurred: $($_)"
+}
