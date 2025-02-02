@@ -21,9 +21,7 @@ if (Get-BitLockerVolume | where {$_.VolumeStatus -eq "DecryptionInProgress"}) {T
 
   # Turn on Bitlocker
     Get-BitLockerVolume | foreach {
-        if ($_.ProtectionStatus -ne "On") {
-            Write-Host "Mountpoint $($_.MountPoint) already has bitlocker enabled."
-        } else {
+        if ($_.ProtectionStatus -eq "Off") {
             if ($_.MountPoint -eq $Env:SystemDrive) {  
                 Enable-BitLocker -MountPoint $_.MountPoint -SkipHardwareTest -RecoveryPasswordProtector
                 Write-Host "Encrypting System Drive $($_.MountPoint)"
@@ -32,6 +30,8 @@ if (Get-BitLockerVolume | where {$_.VolumeStatus -eq "DecryptionInProgress"}) {T
                 Enable-BitLockerAutoUnlock -MountPoint $_.MountPoint
                 Write-Host "Encrypting Non-System Drive $($_.MountPoint) and turning on Auto-Unlock"
             }
+        } else {
+            Write-Host "Mountpoint $($_.MountPoint) already has bitlocker enabled."
         }
     }
 
