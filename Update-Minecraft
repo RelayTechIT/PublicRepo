@@ -1,0 +1,85 @@
+
+$ErrorActionPreference      =   'Stop'
+$ProgressPreference         =   'silentlycontinue'
+
+$BaseDir                    =   "C:\Minecraft_Servers"
+$BkpFiles                   =   "server.properties", "allowlist.json", "permissions.json"
+
+$BkpDir                     =   $BaseDir+'\_BACKUP'
+$UpdateDir                  =   $BaseDir+'\_UPDATES'
+$LogDir                     =   $UpdateDir+'\Logs'
+
+
+$LogFile = $LogDir+'\'+(Get-Date -Format "yyyy.MM.dd_HHmm")+'_MineCraft_Server_Update.log'
+
+
+
+
+$Outfolder  =   "C:\Minecraft_Servers\_UPDATES"
+
+
+Try {
+    if (!$Version) {Throw "Missing version. Cannot continue."}
+      $URI        =   "https://www.minecraft.net/bedrockdedicatedserver/bin-win/bedrock-server-$($Version).zip"
+      $Outfile    =   "$($Outfolder)\bedrock-server-$($Version).zip"
+    if (test-path $Outfile) {
+        Write-Host "$($Outfile) already downloaded."
+    } else {
+        irm -uri $URI -OutFile $Outfile
+            Write-Host "Downloaded $($URI) to $($Outfile)"
+    }
+    
+$Instance = "Peaceful", "Survival"
+
+foreach ($Instance in $Instances) {
+    $SvrProcess     =   'Bedrock_Server_'+$Instance
+    $SvrDirInstall  =   $BaseDir+'\'+$Instance
+    $SvrDirBackup   =   $BkpDir+'\'+$Instance+'\'+(Get-Date -Format "yyyy.MM.dd_HHmm")
+
+    # Update Step 1 - Stop Server Services
+        If (Get-Process $SvrProcess -ea SilentlyContinue) {
+                write-Host "Stopping Process $SvrProcess..."
+                Stop-Process -name $SvrProcess -force
+            } else {
+                write-Host "Process $SvrProcess Already stopped."
+            }
+    
+    # Update Step 2 - Backup config files
+        If (!(Test-Path $SvrDirBackup)) {New-Item $SvrDirBackup -ItemType Directory -Force}
+
+        foreach ($File in $BkpFiles) {
+            $f = $SvrDirInstall+'\'+$File
+                If (Test-Path -Path $f -PathType Leaf) {
+                    write-Host "BACKING UP $f..."
+                    Copy-Item -Path $f -Destination $SvrDirBackup
+                } else { # NO CONFIG FILE MEANS NO VALID SERVER INSTALLED, SOMETHING WENT WRONG...
+                    write-Host "NO $f FOUND ... EXITING"
+                    Start-Sleep -Seconds 3
+                }
+        }
+
+    # Update Step 3 - Unzip new server files into current instance Directory (overwriting some files)
+		write-Host "UPDATING SERVER FILES..."
+		Expand-Archive $Outfile $SvrDirInstall -force
+
+    # Update Step 4 - Restore backed up server configuration files
+		foreach ($File in $BkpFiles) {
+			if(Test-Path -Path "$SvrDirBackup\$File" -PathType Leaf) {
+				write-Host "Restoring $File"
+				Copy-Item -Path "$SvrDirBackup\$File" -Destination "$SvrDirInstall"
+			}
+		} 
+
+    # Update Step 5 - Delete and rename .exe files
+        Remove-Item $SvrDirInstall\$SvrProcess`.exe
+            Write-Host "Deleted $($SvrDirInstall)\$($SvrProcess)"
+        Rename-Item $SvrDirInstall\Bedrock_server.exe $SvrDirInstall\$SvrProcess`.exe
+            Write-Host "Renamed $($SvrDirInstall)\Bedrock_server.exe to $($SvrDirInstall)\$($SvrProcess)`.exe"
+
+    # Update Step 6 - Restart Process
+        Get-ScheduledTask -TaskName "Minecraft $($Instance)" | Start-ScheduledTask
+}
+}
+catch {
+    Write-Host "An error occurred: $($_)"
+}
