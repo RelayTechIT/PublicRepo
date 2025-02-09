@@ -29,7 +29,7 @@ Try {
             Write-Host "Downloaded $($URI) to $($Outfile)"
     }
     
-$Instance = "Peaceful", "Survival"
+$Instances = "Peaceful", "Survival"
 
 foreach ($Instance in $Instances) {
     $SvrProcess     =   'Bedrock_Server_'+$Instance
