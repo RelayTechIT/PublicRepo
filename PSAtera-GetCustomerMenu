@@ -44,7 +44,7 @@ try {
     # If the PSAtera APIKey is not yet set, request with a prompt and set it.
     if (!($AteraAPIKey)) {
         Write-Host "The Atera APIKey is not present. Requesting it now." -foregroundcolor Yellow
-        Write-Host "Enter the Atera API Key to Continue"
+        Write-Host "Enter the Atera API Key and press ENTER to continue."
         $AteraAPIKey = Read-Host
     }
         Set-AteraAPIKey -APIKey $AteraAPIKey
@@ -66,7 +66,8 @@ try {
     # Display Menu and prompt for selection
         while (1) {
             $Output
-            $Choice = Read-Host -Prompt "Enter a Customer ID to continue."
+            Write-Host "Enter a Customer ID and press ENTER to continue."
+            $Choice = Read-Host
             if ($Choice -eq 99) {
                 break;
             } elseif ($Choice -eq 999) {
