@@ -1,0 +1,84 @@
+$ErrorActionPreference  =   'Stop'
+$ProgressPreference     =   'SilentlyContinue'
+
+try {
+    # Ensure TLS 1.2 is used (required for secure downloads)
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+    # Ensure the proper executionpolicy is set
+    $ExecutionScope = "CurrentUser"
+    $ExecutionPolicy = "RemoteSigned"
+    Write-Host "Checking execution policy for the scope $($ExecutionScope) is set to $($ExecutionPolicy)"
+    if ((Get-ExecutionPolicy -Scope CurrentUser) -eq "RemoteSigned") {
+        Write-Host "The execution policy for the scope $($ExecutionScope) is set correctly to: $($ExecutionPolicy)" -foregroundcolor Green
+    } else {
+        Write-Host "The execution policy for the scope $($ExecutionScope) is not set correctly. Changing it now." -foregroundcolor Yellow
+        Set-ExecutionPolicy -Scope $ExecutionScope $ExecutionPolicy -Force
+        Write-Host "The execution policy for the scope $($ExecutionScope) is has been set correctly to: $($ExecutionPolicy)" -foregroundcolor Green
+    }
+    
+    # Check if the required package NuGet is installed
+    $packageName = "NuGet"
+    Write-Host "Checking for package $($packageName)"
+        if (Get-PackageProvider -ListAvailable -Name $packageName -ErrorAction SilentlyContinue) {
+            Write-Host "The package '$packageName' is installed." -foregroundcolor Green
+        } else {
+            Write-Host "The package $($packageName) is not installed. Installing it now." -foregroundcolor Yellow
+            Install-PackageProvider -Name $packageName -Force
+            Write-Host "Successfully installed the package $($packageName)." -foregroundcolor Green
+        }
+    Import-PackageProvider $packageName
+   
+    # Check if the required module PSAtera is installed
+    $moduleName = "PSAtera" 
+    Write-Host "Checking for module $($moduleName)"
+        if (Get-Module -ListAvailable -Name $moduleName -ErrorAction SilentlyContinue) {
+            Write-Host "The module '$moduleName' is installed." -foregroundcolor Green
+        } else {
+            Write-Host "The module $($moduleName) is not installed. Installing it now." -foregroundcolor Yellow
+            Install-Module -Name $moduleName -Force
+            Write-Host "Successfully installed the module $($moduleName)." -foregroundcolor Green
+        }
+    Import-Module $moduleName
+
+    # If the PSAtera APIKey is not yet set, request with a prompt and set it.
+    if (!($AteraAPIKey)) {
+        Write-Host "The Atera APIKey is not present. Requesting it now." -foregroundcolor Yellow
+        Write-Host "Enter the Atera API Key to Continue"
+        $AteraAPIKey = Read-Host
+    }
+        Set-AteraAPIKey -APIKey $AteraAPIKey
+        Remove-Variable AteraAPIKey
+
+    # Use the PSAtera module to query all available customers and generate a menu.
+    $Customers = Get-AteraCustomers | select CustomerID, CustomerName | sort CustomerID
+
+    # Generate Menu
+        $Output = @()
+        $Output += "Atera Customer Menu:"
+        $Output += "    Customer ID        Customer Name"
+        $Output += "    -----------        -------------"
+        $Customers | foreach {$Output += "      $($_.CustomerID)                $($_.CustomerName)"}
+        $Output += ""
+        $Output += "      99                All Customers"
+        $Output += "      999               Exit"
+
+    # Display Menu and prompt for selection
+        while (1) {
+            $Output
+            $Choice = Read-Host -Prompt "Enter a Customer ID to continue."
+            if ($Choice -eq 99) {
+                break;
+            } elseif ($Choice -eq 999) {
+                break;
+            } elseif ($Customers.CustomerID -contains $Selection) {
+                break;
+            } else {
+                Write-Host "Incorrect Value Entered! Press any key to try again"
+                pause
+            }
+        }
+Return $Choice
+} catch {
+    Write-Host "An error has occurred $($_)" -ForegroundColor Red
+}
