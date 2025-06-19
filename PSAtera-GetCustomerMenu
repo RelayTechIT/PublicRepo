@@ -13,7 +13,7 @@ try {
         Write-Host "The execution policy for the scope $($ExecutionScope) is set correctly to: $($ExecutionPolicy)" -foregroundcolor Green
     } else {
         Write-Host "The execution policy for the scope $($ExecutionScope) is not set correctly. Changing it now." -foregroundcolor Yellow
-        Set-ExecutionPolicy -Scope $ExecutionScope $ExecutionPolicy -Force
+        Set-ExecutionPolicy -Scope $ExecutionScope $ExecutionPolicy -Force > $null
         Write-Host "The execution policy for the scope $($ExecutionScope) is has been set correctly to: $($ExecutionPolicy)" -foregroundcolor Green
     }
     
@@ -24,7 +24,7 @@ try {
             Write-Host "The package '$packageName' is installed." -foregroundcolor Green
         } else {
             Write-Host "The package $($packageName) is not installed. Installing it now." -foregroundcolor Yellow
-            Install-PackageProvider -Name $packageName -Force
+            Install-PackageProvider -Name $packageName -Force > $null
             Write-Host "Successfully installed the package $($packageName)." -foregroundcolor Green
         }
     Import-PackageProvider $packageName
@@ -71,14 +71,13 @@ try {
                 break;
             } elseif ($Choice -eq 999) {
                 break;
-            } elseif ($Customers.CustomerID -contains $Selection) {
+            } elseif ($Customers.CustomerID -contains $Choice) {
                 break;
             } else {
                 Write-Host "Incorrect Value Entered! Press any key to try again"
                 pause
             }
         }
-Return $Choice
 } catch {
     Write-Host "An error has occurred $($_)" -ForegroundColor Red
 }
