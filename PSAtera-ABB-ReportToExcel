@@ -1,8 +1,8 @@
-$LogDir   =  "C:\RTSupport\Logs"
-$LogName  =  "$($LogDir)\Atera_Agents_$($CustomerName.replace(' ',''))_$(Get-Date -Format yyyyMMddHHmmss).xlsx"
 
 irm https://raw.githubusercontent.com/RelayTechIT/PublicRepo/refs/heads/main/PSAtera-GetCustomerMenu | iex
 
+$LogDir   =  "C:\RTSupport\Logs"
+$LogName  =  "$($LogDir)\Atera_Agents_$($CustomerName.replace(' ',''))_$(Get-Date -Format yyyyMMddHHmmss).xlsx"
 if (!(test-path $LogDir)) {new-item $LogDir -itemtype Directory -force > $Null}
 get-ateraagents -CustomerID $CustomerID | select AgentName,MachineName,SystemName,VendorSerialNumber,Online,LastSeen,ReportedFromIP | Export-Excel $LogName
 Start-Process $LogName
