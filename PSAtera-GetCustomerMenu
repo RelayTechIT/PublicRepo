@@ -1,6 +1,8 @@
 $ErrorActionPreference  =   'Stop'
 $ProgressPreference     =   'SilentlyContinue'
 
+
+
 try {
     # Ensure TLS 1.2 is used (required for secure downloads)
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -69,10 +71,17 @@ try {
             Write-Host "Enter a Customer ID and press ENTER to continue."
             $Choice = Read-Host
             if ($Choice -eq 99) {
+                $CustomerID = ($Customers | where {$_.CustomerID -eq $($Choice)}).CustomerID
+                $CustomerName = "All Customers"
+                Write-Host "You selected $($CustomerName) for $($CustomerName)"
                 break;
             } elseif ($Choice -eq 999) {
+                Write-Host "You selected $($Choice) for to exit. Exiting Now."
                 break;
             } elseif ($Customers.CustomerID -contains $Choice) {
+                $CustomerID = ($Customers | where {$_.CustomerID -eq $($Choice)}).CustomerID
+                $CustomerName = ($Customers | where {$_.CustomerID -eq $($Choice)}).CustomerName
+                Write-Host "You selected $($Choice) for customer $($CustomerName)"
                 break;
             } else {
                 Write-Host "Incorrect Value Entered! Press any key to try again"
