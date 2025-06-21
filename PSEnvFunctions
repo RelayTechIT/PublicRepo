@@ -1,0 +1,64 @@
+$ErrorActionPreference  =   'Stop'
+$ProgressPreference     =   'SilentlyContinue'
+
+
+function _Check-Environment {
+    param (
+        $ExecutionScope,
+        $ExecutionPolicy
+    )
+        try {
+            Write-Host "Checking execution policy for the scope $($ExecutionScope) is set to $($ExecutionPolicy)"
+                if ((Get-ExecutionPolicy -Scope CurrentUser) -eq "RemoteSigned") {
+                    Write-Host "The execution policy for the scope $($ExecutionScope) is set correctly to: $($ExecutionPolicy)" -foregroundcolor Green
+                } else {
+                    Write-Host "The execution policy for the scope $($ExecutionScope) is not set correctly. Changing it now." -foregroundcolor Yellow
+                    Set-ExecutionPolicy -Scope $ExecutionScope $ExecutionPolicy -Force > $null
+                    Write-Host "The execution policy for the scope $($ExecutionScope) is has been set correctly to: $($ExecutionPolicy)" -foregroundcolor Green
+                }
+        }
+        catch {
+            Write-Host "An error has occurred $($_)" -ForegroundColor Red
+        }
+}
+
+function _Check-Package {
+    param (
+        $PackageName
+    )
+        try {
+            Write-Host "Checking for package $($PackageName)"
+                if (Get-PackageProvider -ListAvailable -Name $PackageName -ErrorAction SilentlyContinue) {
+                    Write-Host "The package '$PackageName' is installed." -foregroundcolor Green
+                } else {
+                    Write-Host "The package $($PackageName) is not installed. Installing it now." -foregroundcolor Yellow
+                    Install-PackageProvider -Name $PackageName -Force > $null
+                    Write-Host "Successfully installed the package $($PackageName)." -foregroundcolor Green
+                }
+            Import-PackageProvider $PackageName
+        }
+        catch {
+            Write-Host "An error has occurred $($_)" -ForegroundColor Red
+        }
+}
+
+function _Check-Module {
+    param (
+        $ModuleName
+    )
+        try {
+            Write-Host "Checking for module $($ModuleName)"
+                if (Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue) {
+                    Write-Host "The module '$ModuleName' is installed." -foregroundcolor Green
+                } else {
+                    Write-Host "The module $($ModuleName) is not installed. Installing it now." -foregroundcolor Yellow
+                    Install-Module -Name $ModuleName -Force
+                    Write-Host "Successfully installed the module $($ModuleName)." -foregroundcolor Green
+                }
+            Import-Module $ModuleName
+        }
+        catch {
+            Write-Host "An error has occurred $($_)" -ForegroundColor Red
+        }
+    
+}
