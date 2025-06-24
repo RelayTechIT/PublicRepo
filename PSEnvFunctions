@@ -1,18 +1,6 @@
 $ErrorActionPreference  =   'Stop'
 $ProgressPreference     =   'SilentlyContinue'
 
-function _Set-Protocols {
-        try {
-                [Net.ServicePointManager]::SecurityProtocol =
-                        [Net.ServicePointManager]::SecurityProtocol -bor
-                        [Net.SecurityProtocolType]::Tls12
-                Write-Host "Protocols set successfully" -foregroundcolor Green
-        }
-        catch {
-            Write-Host "An error has occurred $($_)" -ForegroundColor Red
-        }
-}
-
 function _Check-Environment {
     param (
         $ExecutionScope,
