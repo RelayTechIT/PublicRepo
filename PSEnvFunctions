@@ -32,40 +32,43 @@ function _Check-Environment {
         }
 }
 
-function _Check-Package {
-    param (
-        $PackageName
-    )
-        try {
-            Write-Host "Checking for package $($PackageName)"
-                if (Get-PackageProvider -ListAvailable -Name $PackageName -ErrorAction SilentlyContinue) {
-                    Write-Host "The package '$PackageName' is installed." -foregroundcolor Green
-                } else {
-                    Write-Host "The package $($PackageName) is not installed. Installing it now." -foregroundcolor Yellow
-                    Install-PackageProvider -Name $PackageName -Force > $null
-                    Write-Host "Successfully installed the package $($PackageName)." -foregroundcolor Green
-                }
-            Import-PackageProvider $PackageName
-        }
-        catch {
-            Write-Host "An error has occurred $($_)" -ForegroundColor Red
-        }
-}
-
 function _Check-Module {
     param (
         $ModuleName
     )
+        $type = "module"
         try {
-            Write-Host "Checking for module $($ModuleName)"
+            Write-Host "Checking for $($type) $($ModuleName)"
                 if (Get-Module -ListAvailable -Name $ModuleName -ErrorAction SilentlyContinue) {
-                    Write-Host "The module '$ModuleName' is installed." -foregroundcolor Green
+                    Write-Host "The $($type) $($ModuleName) is installed." -foregroundcolor Green
                 } else {
-                    Write-Host "The module $($ModuleName) is not installed. Installing it now." -foregroundcolor Yellow
-                    Install-Module -Name $ModuleName -Force
-                    Write-Host "Successfully installed the module $($ModuleName)." -foregroundcolor Green
+                    Write-Host "The $($type) $($ModuleName) is not installed. Installing it now." -foregroundcolor Yellow
+                            Install-Module -Name $ModuleName -Force
+                    Write-Host "Successfully installed the $($type) $($ModuleName)." -foregroundcolor Green
                 }
-            Import-Module $ModuleName
+            Import-Module $ModuleName -Force
+        }
+        catch {
+            Write-Host "An error has occurred $($_)" -ForegroundColor Red
+        }
+    
+}
+
+function _Check-PackageProvider {
+    param (
+        $PackageProviderName
+    )
+        $type = "Package Provider"
+        try {
+            Write-Host "Checking for $($type) $($PackageProviderName)"
+                if (Get-PackageProvider -ListAvailable -Name $PackageProviderName -ErrorAction SilentlyContinue) {
+                    Write-Host "The $($type) $($PackageProviderName) is installed." -foregroundcolor Green
+                } else {
+                    Write-Host "The $($type) $($PackageProviderName) is not installed. Installing it now." -foregroundcolor Yellow
+                            Install-PackageProvider -Name $PackageProviderName -Force
+                    Write-Host "Successfully installed the $($type) $($PackageProviderName)." -foregroundcolor Green
+                }
+            Import-PackageProvider -Name $($PackageProviderName) -Force
         }
         catch {
             Write-Host "An error has occurred $($_)" -ForegroundColor Red
