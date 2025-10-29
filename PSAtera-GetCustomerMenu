@@ -49,8 +49,10 @@ try {
         Write-Host "Enter the Atera API Key and press ENTER to continue."
         $AteraAPIKey = Read-Host
     }
+    if ($AteraAPIKey -ne 1) {
         Set-AteraAPIKey -APIKey $AteraAPIKey
         Remove-Variable AteraAPIKey
+    }
 
     # Use the PSAtera module to query all available customers and generate a menu.
     $Customers = Get-AteraCustomers | select CustomerID, CustomerName | sort CustomerID
