@@ -13,7 +13,7 @@ $LogDir                     =   $UpdateDir+'\Logs'
 $LogFile = $LogDir+'\'+(Get-Date -Format "yyyy.MM.dd_HHmm")+'_MineCraft_Server_Update.log'
 
 
-
+$Version = ((irm "https://net-secondary.web.minecraft-services.net/api/v1.0/download/links").result.links | where {$_.downloadType -eq "serverBedrockWindows"}).downloadUrl
 
 $Outfolder  =   "C:\Minecraft_Servers\_UPDATES"
 
@@ -23,7 +23,7 @@ Try {
       $URI        =   "https://www.minecraft.net/bedrockdedicatedserver/bin-win/bedrock-server-$($Version).zip"
       $Outfile    =   "$($Outfolder)\bedrock-server-$($Version).zip"
     if (test-path $Outfile) {
-        Write-Host "$($Outfile) already downloaded."
+        Throw "Server is running current version of $($Version)"
     } else {
         irm -uri $URI -OutFile $Outfile
             Write-Host "Downloaded $($URI) to $($Outfile)"
