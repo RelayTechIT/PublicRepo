@@ -13,7 +13,8 @@ $LogDir                     =   $UpdateDir+'\Logs'
 $LogFile = $LogDir+'\'+(Get-Date -Format "yyyy.MM.dd_HHmm")+'_MineCraft_Server_Update.log'
 
 
-$Version = ((irm "https://net-secondary.web.minecraft-services.net/api/v1.0/download/links").result.links | where {$_.downloadType -eq "serverBedrockWindows"}).downloadUrl
+$DownloadURL = ((irm "https://net-secondary.web.minecraft-services.net/api/v1.0/download/links").result.links | where {$_.downloadType -eq "serverBedrockWindows"}).downloadUrl
+$Version = $DownloadURL.trim(".zip").split('-')[-1]
 
 $Outfolder  =   "C:\Minecraft_Servers\_UPDATES"
 
