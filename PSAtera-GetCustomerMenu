@@ -26,7 +26,7 @@ try {
         $Output += "      999               Exit"
 
     # Display Menu and prompt for selection
-        while (1) {
+        while (!$CustomerID ) {
             $Output
             Write-Host "Enter a Customer ID and press ENTER to continue."
             $Choice = Read-Host
