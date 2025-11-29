@@ -2,8 +2,7 @@
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>
     <Date>2025-11-02T19:03:19.8912075</Date>
-    <Author>RT-MINECRAFT\relaytech</Author>
-    <URI>\MineCraft_Update</URI>
+    <URI>\Bedrock-Update-Minecraft-Servers</URI>
   </RegistrationInfo>
   <Triggers>
     <CalendarTrigger>
