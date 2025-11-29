@@ -40,7 +40,9 @@ Try {
 }
 
 function _UpdateMinecraftServer {
-    $DownloadURL        =   "https://www.minecraft.net/bedrockdedicatedserver/bin-win/bedrock-server-$($LatestOnlineVersion).zip"
+    $DownloadURL        =   "https://www.minecraft.net/bedrockdedicatedserver/bin-win/bedrock-server-$($LatestOnlineVersion).zip"																		# Set Download URL
+	irm -uri $URI -OutFile "$UpdateDir\bedrock-server-$($LatestOnlineVersion).zip"																														# Download update to update directory
+    	Write-Host "Downloaded $($URI) to $($Outfile)"
 
     foreach ($Instance in $Instances) {
         $SvrProcess     =   'Bedrock_Server_'+$Instance
