@@ -1,0 +1,94 @@
+
+$ErrorActionPreference      =   'Stop'
+$ProgressPreference         =   'silentlycontinue'
+
+$BaseDir                    =   "C:\Minecraft_Servers"
+$BkpFiles                   =   "server.properties", "allowlist.json", "permissions.json"
+$Instances                  =   "Peaceful", "Survival"
+
+$LogDir                     =   $UpdateDir+'\Logs'
+$LogFile                    =   $LogDir+'\'+(Get-Date -Format "yyyy.MM.dd_HHmm")+'_MineCraft_Server_Update.log'
+$BkpDir                     =   $BaseDir+'\_BACKUP'
+$UpdateDir                  =   $BaseDir+'\_UPDATES'
+
+
+Try {
+    $DownloadURL                =   ((irm "https://net-secondary.web.minecraft-services.net/api/v1.0/download/links").result.links | where {$_.downloadType -eq "serverBedrockWindows"}).downloadUrl    # The base download URL
+    $LatestOnlineVersion        =   $DownloadURL.trim(".zip").split('-')[-1]                                                                                                                            # The most recent version to download
+    $CurrentLocalVersion        =   (Get-ChildItem $UpdateDir | Sort-Object LastWriteTime | Select-Object -last 1).BaseName.Split('-')[-1]                                                              # The most recent version installed locally
+
+    if ($CurrentLocalVersion -eq $LatestOnlineVersion) {                                                                                                                                                # If the versions match
+        Write-Host "Minecraft server up to date." -ForegroundColor Green
+        Write-Host "    Current Local Version:  $($CurrentLocalVersion)" -ForegroundColor Green
+        Write-Host "    Latest Online Version:  $($LatestOnlineVersion)" -ForegroundColor Green
+                foreach ($Instance in $Instances) {                                                                                                                                                      # Check to make sure the processes are running
+                    if (Get-Process "Bedrock_Server_$($Instance)" -ErrorAction SilentlyContinue) {
+                        Write-Host "Bedrock_Server_$($Instance) is running" -ForegroundColor Green
+                    } else {                                                                                                                                                                             # Start them if they are not
+                        Write-Host "Bedrock_Server_$($Instance) is NOT running starting process: $($BaseDir)\$($Instance)\Bedrock_Server_$($Instance)" -ForegroundColor Yellow
+                        Start-Process "$($BaseDir)\$($Instance)\Bedrock_Server_$($Instance)" -WindowStyle Hidden
+                    }
+                }
+    } else {                                                                                                                                                                                              # If server is not up to date
+        Write-Host "Minecraft server not up to date." -ForegroundColor Yellow
+        Write-Host "    Current Local Version:  $($CurrentLocalVersion)" -ForegroundColor Yellow
+        Write-Host "    Latest Online Version:  $($LatestOnlineVersion)" -ForegroundColor Yellow
+        _UpdateMinecraftServer                                                                                                                                                                            # Call update function
+    }
+} catch {
+    Write-Host "An error occurred: $($_)"
+}
+
+function _UpdateMinecraftServer {
+    $DownloadURL        =   "https://www.minecraft.net/bedrockdedicatedserver/bin-win/bedrock-server-$($LatestOnlineVersion).zip"
+
+    foreach ($Instance in $Instances) {
+        $SvrProcess     =   'Bedrock_Server_'+$Instance
+        $SvrInstallDir  =   $BaseDir+'\'+$Instance
+        $SvrBackupDir   =   $BkpDir+'\'+$Instance+'\'+(Get-Date -Format "yyyy.MM.dd_HHmm")
+
+    # Update Step 1 - Stop Server Services
+        If (Get-Process $SvrProcess -ea SilentlyContinue) {
+                write-Host "Stopping Process $SvrProcess..."
+                Stop-Process -name $SvrProcess -force
+            } else {
+                write-Host "Process $SvrProcess Already stopped."
+            }
+    
+    # Update Step 2 - Backup config files
+        If (!(Test-Path $SvrBackupDir)) {New-Item $SvrBackupDir -ItemType Directory -Force}
+
+        foreach ($File in $BkpFiles) {
+            $f = $SvrInstallDir+'\'+$File
+                If (Test-Path -Path $f -PathType Leaf) {
+                    write-Host "BACKING UP $f..."
+                    Copy-Item -Path $f -Destination $SvrBackupDir
+                } else { # NO CONFIG FILE MEANS NO VALID SERVER INSTALLED, SOMETHING WENT WRONG...
+                    write-Host "NO $f FOUND ... EXITING"
+                    Start-Sleep -Seconds 3
+                }
+        }
+
+    # Update Step 3 - Unzip new server files into current instance Directory (overwriting some files)
+		write-Host "UPDATING SERVER FILES..."
+		Expand-Archive $Outfile $SvrInstallDir -force
+
+    # Update Step 4 - Restore backed up server configuration files
+		foreach ($File in $BkpFiles) {
+			if(Test-Path -Path "$SvrBackupDir\$File" -PathType Leaf) {
+				write-Host "Restoring $File"
+				Copy-Item -Path "$SvrBackupDir\$File" -Destination "$SvrInstallDir"
+			}
+		} 
+
+    # Update Step 5 - Delete and rename .exe files
+        Remove-Item $SvrInstallDir\$SvrProcess`.exe
+            Write-Host "Deleted $($SvrInstallDir)\$($SvrProcess)"
+        Rename-Item $SvrInstallDir\Bedrock_server.exe $SvrInstallDir\$SvrProcess`.exe
+            Write-Host "Renamed $($SvrInstallDir)\Bedrock_server.exe to $($SvrInstallDir)\$($SvrProcess)`.exe"
+
+    # Update Step 6 - Restart Process
+        Write-Host "Bedrock_Server_$($Instance) is NOT running starting process: $($BaseDir)\$($Instance)\Bedrock_Server_$($Instance)" -ForegroundColor Yellow
+        Start-Process "$($BaseDir)\$($Instance)\Bedrock_Server_$($Instance)" -WindowStyle Hidden
+    }
+}
